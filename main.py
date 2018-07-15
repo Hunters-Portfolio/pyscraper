@@ -16,14 +16,17 @@ class ImageParser(HTMLParser):
         HTMLParser.__init__(self)
     
     def handle_starttag(self, tag, attrs):
-        # Only want 'img' tags, so that's what we'll check for
-        if tag != "img":
+        # Only want 'img' and 'a' tags, so that's what we'll check for
+        if tag != "img" and tag != "a":
             return
+        # Make sure links point to images if we're scraping them
+        filetypes = ["jpeg","gif","jpg","png","bmp","svg"]
         # Find the 'src' attribute, and download the image
         for x in attrs:
-            if x[0] == "src":
-                print("Downloading image " + x[1])
-                downloadImage(x[1].strip("https://").strip("http://"))
+            if x[0] == "src" and tag == "img":
+                downloadImage(x[1])
+            elif x[0] == "href" and tag == "a" and x[1].split(".")[-1] in filetypes:
+                downloadImage(x[1])
 
     def handle_data(self, data):
         # Don't care about data, so just return
@@ -39,6 +42,8 @@ def getHTML(urlLoc):
     parser.parsePage()
 
 def downloadImage(urlLoc):
+    # Ensure that the url is correct
+    urlLoc = formatUrl(urlLoc)
     # Grab the last segment of the url for the filename
     # eg. "i.4cdn.org/g/1531602832712s.jpg" becomes "1531602832712s.jpg"
     filename = urlLoc.split('/')[-1]
@@ -48,8 +53,9 @@ def downloadImage(urlLoc):
         os.makedirs(foldername)
     # Download the image and save to disk
     path = foldername + "/" + filename
-    r = requests.get("http://"+urlLoc, stream=True)
-    if r.status.code == 200:
+    print("Downloading image " + urlLoc)
+    r = requests.get(urlLoc, stream=True)
+    if r.status_code == 200:
         with open(path, 'wb') as f:
             for chunk in r.iter_content(1024):
                 f.write(chunk)
@@ -58,8 +64,12 @@ def downloadImage(urlLoc):
         print("Expected status 200, got status " + str(r.status.code))
         
 
-print(sys.argv)
-
+def formatUrl(urlStr):
+    urlStr = urlStr.replace("https://","").replace("http://","")
+    if urlStr[0:2] == '//':
+        urlStr = urlStr[2:]
+    return "http://" + urlStr
+    
 if len(sys.argv) < 2:
     print("Invalid arguments!")
     exit()
