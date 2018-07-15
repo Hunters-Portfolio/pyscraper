@@ -41,24 +41,34 @@ def getHTML(urlLoc):
     parser = ImageParser(urlLoc)
     parser.parsePage()
 
+# Create a list of already downloaded files to avoid double-dipping
+alreadyDownloaded = []
+# Create a folder with the date and time of access
+foldername = datetime.date.today().strftime("%I:%M%p on %B %d, %Y")
+if not os.path.exists(foldername):
+    os.makedirs(foldername)
+
+
 def downloadImage(urlLoc):
     # Ensure that the url is correct
     urlLoc = formatUrl(urlLoc)
     # Grab the last segment of the url for the filename
     # eg. "i.4cdn.org/g/1531602832712s.jpg" becomes "1531602832712s.jpg"
     filename = urlLoc.split('/')[-1]
-    # Create a folder with the date and time of access
-    foldername = datetime.date.today().strftime("%I:%M%p on %B %d, %Y")
-    if not os.path.exists(foldername):
-        os.makedirs(foldername)
     # Download the image and save to disk
     path = foldername + "/" + filename
     print("Downloading image " + urlLoc)
+    # Double check to see if the image has already been downloaded
+    if urlLoc in alreadyDownloaded:
+        print("Image already downloaded!")
+        return
+    # Download time
     r = requests.get(urlLoc, stream=True)
     if r.status_code == 200:
         with open(path, 'wb') as f:
             for chunk in r.iter_content(1024):
                 f.write(chunk)
+        alreadyDownloaded.append(urlLoc)
     else:
         print("Error downloading image!")
         print("Expected status 200, got status " + str(r.status.code))
