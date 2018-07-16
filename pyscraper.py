@@ -43,11 +43,6 @@ def getHTML(urlLoc):
 
 # Create a list of already downloaded files to avoid double-dipping
 alreadyDownloaded = []
-# Create a folder with the date and time of access
-foldername = datetime.date.today().strftime("%B %d, %Y")
-if not os.path.exists(foldername):
-    os.makedirs(foldername)
-
 
 def downloadImage(urlLoc):
     # Ensure that the url is correct
@@ -85,7 +80,13 @@ if len(sys.argv) < 2:
     print("Useage: python pyscraper.py <url> [folder]")
     exit()
 
+# Use the user provided folder name or just default to today's date
 if len(sys.argv) == 3:
     foldername = sys.argv[2]
+else:
+    foldername = datetime.date.today().strftime("%B %d, %Y")
+# Make sure the folder exists, if not, create it
+if not os.path.exists(foldername):
+    os.makedirs(foldername)
 
 getHTML(sys.argv[1])
