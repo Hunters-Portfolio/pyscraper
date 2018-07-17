@@ -1,4 +1,5 @@
-# Program for scraping a given webpage for all of its images
+# Program for scraping a given webpage for all of its images]
+# Usage: python pyscraper.py <url> [folder]
 
 # Libraries:
 from html.parser import HTMLParser
@@ -10,7 +11,8 @@ import datetime
 # Classes:
 class ImageParser(HTMLParser):
     urlLoc = ""
-    
+
+    # Constructor
     def __init__(self, urlL):
         self.urlLoc = urlL
         HTMLParser.__init__(self)
@@ -27,19 +29,12 @@ class ImageParser(HTMLParser):
                 downloadImage(x[1])
             elif x[0] == "href" and tag == "a" and x[1].split(".")[-1] in filetypes:
                 downloadImage(x[1])
-
-    def handle_data(self, data):
-        # Don't care about data, so just return
-        return
-
+    
     def parsePage(self):
         r = requests.get(self.urlLoc)
         self.feed(r.text)
 
 # Code starts here:
-def getHTML(urlLoc):
-    parser = ImageParser(urlLoc)
-    parser.parsePage()
 
 # Create a list of already downloaded files to avoid double-dipping
 alreadyDownloaded = []
@@ -59,22 +54,28 @@ def downloadImage(urlLoc):
         return
     # Download time
     r = requests.get(urlLoc, stream=True)
+    # Make sure we're good to go
     if r.status_code == 200:
+        # Open the file on disk and write the image stream to it
         with open(path, 'wb') as f:
             for chunk in r.iter_content(1024):
                 f.write(chunk)
+        # Add it to the list so we don't download the image again
         alreadyDownloaded.append(urlLoc)
+    # Didn't work, abort the download
     else:
         print("Error downloading image!")
         print("Expected status 200, got status " + str(r.status.code))
         
-
+# Strip anything that might cause requests to panic and break
+# Make sure it's in the right format so requests doesn't panic and break
 def formatUrl(urlStr):
     urlStr = urlStr.replace("https://","").replace("http://","")
     if urlStr[0:2] == '//':
         urlStr = urlStr[2:]
     return "http://" + urlStr
-    
+
+# Double check to make sure the user is using the program correctly
 if len(sys.argv) < 2:
     print("Invalid arguments!")
     print("Useage: python pyscraper.py <url> [folder]")
@@ -89,4 +90,6 @@ else:
 if not os.path.exists(foldername):
     os.makedirs(foldername)
 
-getHTML(sys.argv[1])
+# Create an ImageParser object and run the code
+parser = ImageParser(sys.argv[1])
+parser.parsePage()
