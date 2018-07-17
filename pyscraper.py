@@ -79,7 +79,7 @@ def formatUrl(urlStr):
 if len(sys.argv) < 2:
     print("Invalid arguments!")
     print("Useage: python pyscraper.py <url> [folder]")
-    exit()
+    exit(1)
 
 # Use the user provided folder name or just default to today's date
 if len(sys.argv) == 3:
